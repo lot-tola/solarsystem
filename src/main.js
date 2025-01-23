@@ -33,7 +33,7 @@ const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerH
 const orbit = new OrbitControls(camera, renderer.domElement)
 
 
-camera.position.set(6, 8, 50)
+camera.position.set(6, 80, 300)
 orbit.update()
 
 const textureLoader = new THREE.TextureLoader()
@@ -49,51 +49,74 @@ scene.background = cubeTextureLoader.load([
 
 
 
-const ambientLight = new THREE.AmbientLight()
+const ambientLight = new THREE.AmbientLight(0xffffff, 2)
 scene.add(ambientLight)
 
-const pointLight = new THREE.PointLight(0xffffff, 500, 1000)
+const pointLight = new THREE.PointLight(0xffffff, 1000, 1000)
 scene.add(pointLight)
 
-const axesHelper = new THREE.AxesHelper(20)
-scene.add(axesHelper)
-
-
-
-const sunGeo = new THREE.SphereGeometry(4, 32, 32)
+const sunGeo = new THREE.SphereGeometry(10, 32, 32)
 const sunMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(sunTexture) })
 const sun = new THREE.Mesh(sunGeo, sunMat)
 scene.add(sun)
 
-const mercuryGeo = new THREE.SphereGeometry(2, 32, 32)
-const mercuryMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(mercuryTexture) })
-const mercury = new THREE.Mesh(mercuryGeo, mercuryMat)
 
-mercury.position.set(10, 0, 0)
+const createPlanet = (size, width, height, texture, position, ring) => {
+  const planetGeo = new THREE.SphereGeometry(size, width, height)
+  const planetMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(texture) })
+  const planet = new THREE.Mesh(planetGeo, planetMat)
+  planet.position.set(position, 0, 0)
+  const planetObj = new THREE.Object3D()
+  if(ring){
+    const ringGeo = new THREE.RingGeometry(ring.innerRadius, ring.outerRadius, 32)
+    const ringMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(ring.texture), side: THREE.DoubleSide})
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat)
+    ringMesh.rotation.x = -0.5 * Math.PI
+    planet.add(ringMesh)
+  }
+  planetObj.add(planet)
+  scene.add(planetObj)
+  return {planet, planetObj}
+}
 
-const mercuryObj = new THREE.Object3D()
-scene.add(mercuryObj)
+const mercury = createPlanet(3.2, 32, 32, mercuryTexture, 28)
+const venus = createPlanet(5.8, 32, 32, venusTexture, 44)
+const earth = createPlanet(6, 32, 32, earthTexture, 62)
+const mars = createPlanet(4, 32, 32, marsTexture, 78)
+const jupiter = createPlanet(12, 50, 50, jupiterTexture, 100)
+const saturn = createPlanet(10, 50, 50, saturnTexture, 138, { innerRadius: 10, outerRadius: 20, texture: saturnRingTexture })
+const uranus = createPlanet(7, 50, 50, uranusTexture, 176, { innerRadius: 7, outerRadius: 12, texture: uranusRingTexture })
+const neptune = createPlanet(7, 50, 50, neptuneTexture, 200)
+const pluto = createPlanet(2.8, 25, 25, plutoTexture, 216)
 
-mercuryObj.add(mercury)
-
-const saturnGeo = new THREE.SphereGeometry(4)
-const saturnMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(saturnTexture) })
-const saturn = new THREE.Mesh(saturnGeo, saturnMat)
-scene.add(saturn)
-saturn.position.set(25, 0, 0)
-const saturnRingGeo = new THREE.RingGeometry(2.5, 6.5)
-const saturnRingMat = new THREE.MeshStandardMaterial({ map: textureLoader.load(saturnRingTexture), side: THREE.DoubleSide })
-const saturnRing = new THREE.Mesh(saturnRingGeo, saturnRingMat)
-saturn.add(saturnRing)
-
-saturn.rotation.y = -0.2   * Math.PI
-saturn.rotation.x = -0.4 * Math.PI
 
 
 function animate(){
-  sun.rotateY(0.002)
-  mercury.rotateY(0.009)
-  mercuryObj.rotateY(0.01)
+
+  // self-rotation
+  sun.rotateY(0.004)
+  mercury.planet.rotateY(0.004)
+  venus.planet.rotateY(0.002)
+  earth.planet.rotateY(0.02)
+  mars.planet.rotateY(0.018)
+  jupiter.planet.rotateY(0.04)
+  saturn.planet.rotateY(0.038)
+  uranus.planet.rotateY(0.03)
+  neptune.planet.rotateY(0.032)
+  pluto.planet.rotateY(0.008)
+
+  // rotation around the sun 
+  mercury.planetObj.rotateY(0.04)
+  venus.planetObj.rotateY(0.015)
+  earth.planetObj.rotateY(0.01)
+  mars.planetObj.rotateY(0.008)
+  jupiter.planetObj.rotateY(0.002)
+  saturn.planetObj.rotateY(0.0009)
+  uranus.planetObj.rotateY(0.0004)
+  neptune.planetObj.rotateY(0.0001)
+  pluto.planetObj.rotateY(0.00007)
+
+  
   renderer.render(scene, camera)
 }
 renderer.setAnimationLoop(animate)
